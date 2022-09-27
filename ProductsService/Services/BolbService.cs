@@ -8,13 +8,14 @@ namespace ProductsService.Model
 {
     public class BolbService : IBolbService
     {
+        private readonly ILogger<BolbService> _logger;
         private readonly BlobServiceClient _bolbServiceClient;
 
-        public BolbService(BlobServiceClient bolbServiceClient)
+        public BolbService(ILogger<BolbService> logger, BlobServiceClient bolbServiceClient)
         {
+            _logger = logger;
             this._bolbServiceClient = bolbServiceClient;
         }
-
 
 
         public async Task<Stream> GetResourceByName(BolbModelRequest bolbModelRequest)
@@ -38,7 +39,7 @@ namespace ProductsService.Model
             }
             catch (Exception ex)
             {
-                Console.WriteLine("--> Could not read the resources", ex.Message, ex.StackTrace);
+                _logger.LogError("--> Could not read the resources", ex.Message, ex.StackTrace);
             }
             return items;
         }
@@ -53,20 +54,28 @@ namespace ProductsService.Model
             }
             catch (Exception ex)
             {
-                Console.WriteLine("--> Could not upload the resources", ex.Message, ex.StackTrace);
+                _logger.LogError("--> Could not upload the resources", ex.Message, ex.StackTrace);
             }
         }
 
         public async Task DeleteResource(BolbModelRequest bolbModelRequest)
         {
             var client = InitializeContainerClient(bolbModelRequest);
-            var blobDownloadInfo = await client.DeleteIfExistsAsync();
+            await client.DeleteIfExistsAsync();
+            _logger.LogInformation($"--> Resource {bolbModelRequest.ResourceName} deleted from container {bolbModelRequest.ContainerName}");
         }
-        
 
+               
+
+      
         private BlobClient InitializeContainerClient(BolbModelRequest bolbModelRequest)
         {
             var containerClient = _bolbServiceClient.GetBlobContainerClient(bolbModelRequest.ContainerName);
+            var createedresponse =containerClient.CreateIfNotExists();
+            if (createedresponse!=null)
+            {
+                _logger.LogInformation($"--> Created new container with {bolbModelRequest.ContainerName}");
+            }
             return containerClient.GetBlobClient(bolbModelRequest.ResourceName);
         }
 

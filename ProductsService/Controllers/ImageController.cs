@@ -12,19 +12,21 @@ namespace ProductsService.Controllers
 
         private readonly ILogger<ResourcesController> _logger;
         private readonly IBolbService _blobService;
+        private  BolbModelRequest _request;
 
 
-        public ResourcesController(ILogger<ResourcesController> logger, IBolbService blobService)
+
+        public ResourcesController(ILogger<ResourcesController> logger, IBolbService blobService, BolbModelRequest request)
         {
             _logger = logger;
             _blobService = blobService;
+            _request = request;
         }
 
         [HttpGet(Name = nameof(GetAllResources))]
         public async Task<IActionResult> GetAllResources()
-        {
-            var request = new BolbModelRequest() { ContainerName = "test", ResourceName = "" };
-            return Ok(await _blobService.GetResourcesNameList(request));            
+        {   
+            return Ok(await _blobService.GetResourcesNameList(_request));            
         }
 
 
@@ -32,8 +34,8 @@ namespace ProductsService.Controllers
         [HttpGet("Stream/{ResourceName}", Name = nameof(GetResourceStreamByName))]
         public async Task<Stream> GetResourceStreamByName(string ResourceName)
         {
-            var request = new BolbModelRequest() { ContainerName = "test", ResourceName = ResourceName };
-            var strm = await _blobService.GetResourceByName(request);
+            _request.ResourceName = ResourceName;
+            var strm = await _blobService.GetResourceByName(_request);
             return strm;
            
         }
@@ -41,8 +43,8 @@ namespace ProductsService.Controllers
         [HttpGet("View/{ResourceName}", Name = nameof(GetResourceViewByName))]
         public async Task<IActionResult> GetResourceViewByName(string ResourceName)
         {
-            var request = new BolbModelRequest() { ContainerName = "test", ResourceName = ResourceName };
-            var strm = await _blobService.GetResourceByName(request);
+            _request.ResourceName = ResourceName;
+            var strm = await _blobService.GetResourceByName(_request);
             return File(strm, "image/jpeg");
 
         }
@@ -53,28 +55,25 @@ namespace ProductsService.Controllers
         {
             
             if ( resource== null)
-            {
                 return BadRequest();
-            }
-            var bolbModelRequest = new BolbModelRequest()
-            {
-                ContainerName = "test",
-                ResourceName = string.IsNullOrEmpty(newname) ? resource.FileName : newname,
-            };
-            bolbModelRequest.ResourceStream = resource.OpenReadStream();
-            await _blobService.UploadResource(bolbModelRequest);            
-            return Ok();
+            
+            if (!string.IsNullOrEmpty(newname))
+                _request.ResourceName =  newname+ Path.GetExtension(resource.FileName);            
+            
+            _request.ResourceStream = resource.OpenReadStream();
+            await _blobService.UploadResource(_request);            
+            return CreatedAtRoute(nameof(UploadResourceOnContainer), new { resourceName= _request.ResourceName });
         }
 
         [HttpDelete(Name = nameof(DeleteResourceByName))]
         public async Task<IActionResult> DeleteResourceByName(string newname)
         {
-            var bolbModelRequest = new BolbModelRequest()
+            if (string.IsNullOrEmpty(newname))
             {
-                ContainerName = "test",
-                ResourceName = newname
-            };
-            await _blobService.DeleteResource(bolbModelRequest);
+                return BadRequest();
+            }
+            _request.ResourceName = newname;
+            await _blobService.DeleteResource(_request);
             return NoContent();
         }
     }

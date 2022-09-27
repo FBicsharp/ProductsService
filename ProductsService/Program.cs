@@ -1,17 +1,16 @@
-using Azure.Storage.Blobs;
-using Microsoft.Extensions.Azure;
-using ProductsService.Model;
+
+using ProductsService.ServiceExtension;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-var configuration = builder.Configuration;
 builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddSingleton(s=> new BlobServiceClient(configuration["AzureBlobStorageConnectionString"]));
-builder.Services.AddSingleton<IBolbService, BolbService>();
+
+
+builder.Services.AddProductServices(builder.Configuration);
+
+
 
 var app = builder.Build();
 
