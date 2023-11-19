@@ -35,7 +35,7 @@ namespace ProductsService.Controllers
         public async Task<Stream> GetResourceStreamByName(string ResourceName)
         {
             _request.ResourceName = ResourceName;
-            var strm = await _blobService.GetResourceByName(_request);
+            var strm = await _blobService.GetResourceByNameAsStream(_request);
             return strm;
            
         }
@@ -44,7 +44,7 @@ namespace ProductsService.Controllers
         public async Task<IActionResult> GetResourceViewByName(string ResourceName)
         {
             _request.ResourceName = ResourceName;
-            var strm = await _blobService.GetResourceByName(_request);
+            var strm = await _blobService.GetResourceByNameAsStream(_request);
             return File(strm, "image/jpeg");
 
         }

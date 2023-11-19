@@ -11,7 +11,7 @@ namespace ProductsService.ServiceExtension
 
         public static IServiceCollection AddProductServices(this IServiceCollection services, IConfiguration config)
         {
-            ConfigureEnviroment(config);
+            ConfigureAndValidateEnviromentFroimConfiguration(config);
 
             services.AddSingleton(s=> new CompanySettings() { 
                 CompanyId= Guid.Parse(Environment.GetEnvironmentVariable("CompanyId", EnvironmentVariableTarget.User)),
@@ -19,7 +19,7 @@ namespace ProductsService.ServiceExtension
             });
             services.AddSingleton(s => new BlobServiceClient(Environment.GetEnvironmentVariable("AzureBlobStorageConnectionString", EnvironmentVariableTarget.User)));
             services.AddScoped<IBolbService, BolbService>();
-            services.AddTransient<BolbModelRequest>();
+            services.AddTransient<IBolbModelRequest,BolbModelRequest>();
             services.AddScoped<IProductRepo, ProductRepo>();
             services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
@@ -38,13 +38,31 @@ namespace ProductsService.ServiceExtension
         }
 
 
-        public static void ConfigureEnviroment(IConfiguration config)
+        public static void ConfigureAndValidateEnviromentFroimConfiguration(IConfiguration config)
         {
-            EnviromentVariableCreateIfNotExists("ProductDbConnection", config.GetConnectionString("ProductConnection"), EnvironmentVariableTarget.User);
-            EnviromentVariableCreateIfNotExists("AzureBlobStorageConnectionString", config["AzureBlobStorageConnectionString"], EnvironmentVariableTarget.User);
-            EnviromentVariableCreateIfNotExists("CompanyId", config["AzureBlobStorageContainer:CompanyId"], EnvironmentVariableTarget.User);
-            EnviromentVariableCreateIfNotExists("bolbName", config["AzureBlobStorageContainer:Name"], EnvironmentVariableTarget.User);
+            //validate configuration
+            var dbConnection = config.GetConnectionString("ProductConnection");
+            if (string.IsNullOrEmpty(dbConnection))
+                throw new Exception("ProductDbConnection is not set");
 
+            var azureBlobStorageConnectionString = config["AzureBlobStorageConnectionString"];
+            if (string.IsNullOrEmpty(azureBlobStorageConnectionString))
+                throw new Exception("AzureBlobStorageConnectionString is not set");
+
+            var companyId = config["AzureBlobStorageContainer:CompanyId"];
+            if (string.IsNullOrEmpty(companyId))
+                throw new Exception("AzureBlobStorageContainer:CompanyId is not set");            
+
+            var bolbName = config["AzureBlobStorageContainer:Name"];
+            if (string.IsNullOrEmpty(bolbName))
+                throw new Exception("AzureBlobStorageContainer:Name is not set");
+
+
+            EnviromentVariableCreateIfNotExists("ProductDbConnection", dbConnection, EnvironmentVariableTarget.User);
+            EnviromentVariableCreateIfNotExists("AzureBlobStorageConnectionString", azureBlobStorageConnectionString, EnvironmentVariableTarget.User);
+            EnviromentVariableCreateIfNotExists("CompanyId", companyId, EnvironmentVariableTarget.User);
+            EnviromentVariableCreateIfNotExists("bolbName", bolbName, EnvironmentVariableTarget.User);
+            
         }
 
         

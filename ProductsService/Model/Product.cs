@@ -1,4 +1,3 @@
-using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -7,24 +6,35 @@ namespace ProductsService.Model
     public class Product
     {
 
-        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int Id { get; set; }
+        //[DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        public Guid id { get; set; } = Guid.NewGuid();
         [Key,Column(Order = 1),Required]
-        public Guid Company { get; set; }
+        public Guid company { get; set; } = Guid.Empty;
         [Key, Column(Order = 2), Required, MaxLength(35)]
-        public string Article { get; set; }
+        public string part_number { get; set; } = string.Empty;
         [Required, MaxLength(500)]
-        public string Description { get; set; }
-        [Required, MaxLength(3)]
-        public string Uom { get; set; }
+        public string description { get; set; } = string.Empty;
+        [Required, MaxLength(10)]
+        public string unit_of_measure { get; set; } = "Number";
         [Required]
-        public decimal Price { get; set; } = 0;
+        public decimal price { get; set; } = 0;
+        [Required, MaxLength(10)]
+        public string currency { get; set; } = string.Empty;
         [Required]
-        public DateTime CreationDate { get; set; } = DateTime.Now;
+        public DateTime creation_date { get; set; } = DateTime.UtcNow;
         [Required]
-        public DateTime LastUpdate { get; set; } = DateTime.Now;
+        public DateTime last_update { get; set; } = DateTime.UtcNow;
         [MaxLength(63)]
-        public string ImageId { get; set; }
+        public string imageId { get; set; }
+        public ProductState state { get; set; }
+
 
     }
+    public enum ProductState
+    {
+        Active = 0,
+        Inactive = 1
+
+    }
+
 }

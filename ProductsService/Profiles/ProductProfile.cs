@@ -10,7 +10,7 @@ namespace ProductsService.Profiles
         {
             CreateMap<Product, ProductReadDto>();
             CreateMap<ProductCreateDto, Product>();
-            CreateMap<Product, ProductPublishDto>();
+            CreateMap<ProductUpdateDto, Product>();
             
         }
     }

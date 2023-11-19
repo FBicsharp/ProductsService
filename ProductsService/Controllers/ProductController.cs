@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using ProductsService.Data;
 using ProductsService.Dtos;
 using ProductsService.Model;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 namespace ProductsService.Controllers
 {
@@ -28,17 +29,31 @@ namespace ProductsService.Controllers
         }
 
         [HttpGet(Name = nameof(GetAllProducts))]
-        public ActionResult<IEnumerable<ProductReadDto>> GetAllProducts()
+        public async  Task<ActionResult<IEnumerable<ProductReadDto>>> GetAllProducts(Guid company, CancellationToken cancellationToken)
         {
-            var Products = _repository.GetAllProducts();
+            var Products = await _repository.GetAllProductsAsync(company, cancellationToken);
             return Ok(_mapper.Map<IEnumerable<ProductReadDto>>(Products));
         }
 
 
-        [HttpGet("{id}", Name = nameof(GetProductById))]
-        public ActionResult<ProductReadDto> GetProductById(int id)
+        [HttpGet("{company}/{id}", Name = nameof(GetProductById))]
+        public async Task<ActionResult<ProductReadDto>> GetProductById(Guid company,Guid id, CancellationToken cancellationToken)
         {
-            var Product = _repository.GetProductById(id);
+            var Product = await _repository.GetProductByIdAsync(company, id, cancellationToken);
+            if (Product == null)
+            {
+                return NotFound();
+            }
+            return Ok(_mapper.Map<ProductReadDto>(Product));
+        }
+
+        [HttpPost("{newProduct}", Name = nameof(UpdateProduct))]
+        public async Task<ActionResult<ProductReadDto>> UpdateProduct(ProductUpdateDto updatedProduct, CancellationToken cancellationToken)
+        {
+            var updatedProducttmp = _mapper.Map<Product>(updatedProduct);
+            await _repository.UpdateProductAsync(updatedProducttmp, cancellationToken);
+            await _repository.SaveChangesAsync(cancellationToken);
+            var Product = await _repository.GetProductByIdAsync(updatedProducttmp.company, updatedProducttmp.id, cancellationToken);
             if (Product == null)
             {
                 return NotFound();
@@ -47,28 +62,27 @@ namespace ProductsService.Controllers
         }
 
 
+
         [HttpPost(Name = nameof(CreateProducts))]
-        public async Task<ActionResult<IEnumerable<ProductReadDto>>> CreateProducts(ProductCreateDto newProduct)
+        public async Task<ActionResult<IEnumerable<ProductReadDto>>> CreateProducts(ProductCreateDto newProduct,CancellationToken cancellationToken)
         {
             var Product = _mapper.Map<Product>(newProduct);
 
-            _repository.CreateProduct(Product);
-            _repository.SaveChanges();
+            await _repository.CreateProductAsync(Product, cancellationToken);
+            await _repository.SaveChangesAsync(cancellationToken);
             var ProductCreated = _mapper.Map<ProductReadDto>(Product);
                         
             try//asyncmethod
             {
-                var ProductPublish = _mapper.Map<ProductPublishDto>(Product);
-                //ProductPublish.Event = "ProductPublished";
+                var ProductPublish = _mapper.Map<ProductNotifiyDto>(Product);
+                ProductPublish.EventType = ProductEventType.Created_Event;                
                 //_messageBusClient.PublishNewProduct(ProductPublish);
             }
             catch (System.Exception ex)
             {
                 System.Console.WriteLine("Could not send asynchronously" + ex.Message);
             }
-
-
-            return CreatedAtRoute(nameof(CreateProducts), new { Id = ProductCreated.Id }, ProductCreated);
+            return CreatedAtRoute(nameof(CreateProducts), new { Id = ProductCreated.id }, ProductCreated);
         }
 
 

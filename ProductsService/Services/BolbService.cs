@@ -14,19 +14,29 @@ namespace ProductsService.Model
         public BolbService(ILogger<BolbService> logger, BlobServiceClient bolbServiceClient)
         {
             _logger = logger;
-            this._bolbServiceClient = bolbServiceClient;
+            _bolbServiceClient = bolbServiceClient;
         }
 
-
-        public async Task<Stream> GetResourceByName(BolbModelRequest bolbModelRequest)
+        private async Task<BinaryData> GetResourceByNameAsBinaryData(IBolbModelRequest bolbModelRequest)
         {
 
-            var client = InitializeContainerClient(bolbModelRequest);
+            var client = InitializeOrRetriveContainerClient(bolbModelRequest);
             var blobDownload = await client.DownloadContentAsync();
-            return blobDownload.Value.Content.ToStream();
+            return blobDownload.Value.Content;
         }
 
-        public async Task<IEnumerable<string>> GetResourcesNameList(BolbModelRequest bolbModelRequest)
+        public async Task<Stream> GetResourceByNameAsStream(IBolbModelRequest bolbModelRequest)
+            => (await GetResourceByNameAsBinaryData(bolbModelRequest)).ToStream();
+
+        public async Task<byte[]> GetResourceByNameAsByteArray(IBolbModelRequest bolbModelRequest) 
+            => (await GetResourceByNameAsBinaryData(bolbModelRequest)).ToArray();
+
+
+
+
+
+
+        public async Task<IEnumerable<string>> GetResourcesNameList(IBolbModelRequest bolbModelRequest)
         {
             var containerClient = _bolbServiceClient.GetBlobContainerClient(bolbModelRequest.ContainerName);
             var items = new List<string>();
@@ -44,9 +54,9 @@ namespace ProductsService.Model
             return items;
         }
 
-        public async Task UploadResource(BolbModelRequest bolbModelRequest)
+        public async Task UploadResource(IBolbModelRequest bolbModelRequest)
         {
-            var client = InitializeContainerClient(bolbModelRequest);
+            var client = InitializeOrRetriveContainerClient(bolbModelRequest);
             var blobhttp = new BlobHttpHeaders() { ContentType = "application/octet-stream" };
             try
             {
@@ -58,9 +68,9 @@ namespace ProductsService.Model
             }
         }
 
-        public async Task DeleteResource(BolbModelRequest bolbModelRequest)
+        public async Task DeleteResource(IBolbModelRequest bolbModelRequest)
         {
-            var client = InitializeContainerClient(bolbModelRequest);
+            var client = InitializeOrRetriveContainerClient(bolbModelRequest);
             await client.DeleteIfExistsAsync();
             _logger.LogInformation($"--> Resource {bolbModelRequest.ResourceName} deleted from container {bolbModelRequest.ContainerName}");
         }
@@ -68,7 +78,7 @@ namespace ProductsService.Model
                
 
       
-        private BlobClient InitializeContainerClient(BolbModelRequest bolbModelRequest)
+        private BlobClient InitializeOrRetriveContainerClient(IBolbModelRequest bolbModelRequest)
         {
             var containerClient = _bolbServiceClient.GetBlobContainerClient(bolbModelRequest.ContainerName);
             var createedresponse =containerClient.CreateIfNotExists();

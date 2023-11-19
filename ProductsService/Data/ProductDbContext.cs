@@ -13,10 +13,7 @@ namespace ProductsService.Data
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<Product>()
-                .HasKey(nameof(Product.Article), nameof(Product.Company));
-                
-
-            
+                .HasKey(nameof(Product.part_number), nameof(Product.company));
         }
 
         public DbSet<Product> Products { get; set; }
