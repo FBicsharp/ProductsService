@@ -54,7 +54,7 @@ namespace ProductsService.Model
             return items;
         }
 
-        public async Task UploadResource(IBolbModelRequest bolbModelRequest)
+        public async Task<bool> UploadResource(IBolbModelRequest bolbModelRequest)
         {
             var client = InitializeOrRetriveContainerClient(bolbModelRequest);
             var blobhttp = new BlobHttpHeaders() { ContentType = "application/octet-stream" };
@@ -65,14 +65,23 @@ namespace ProductsService.Model
             catch (Exception ex)
             {
                 _logger.LogError("--> Could not upload the resources", ex.Message, ex.StackTrace);
+                return false;
             }
+            _logger.LogInformation($"--> Resource {bolbModelRequest.ResourceName} uploaded on container {bolbModelRequest.ContainerName}");
+            return true;
         }
 
-        public async Task DeleteResource(IBolbModelRequest bolbModelRequest)
+        public async Task<bool> DeleteResource(IBolbModelRequest bolbModelRequest)
         {
             var client = InitializeOrRetriveContainerClient(bolbModelRequest);
-            await client.DeleteIfExistsAsync();
+            var isDelated= await client.DeleteIfExistsAsync();
+            if (!isDelated)
+            {
+                _logger.LogError($"--> Resource {bolbModelRequest.ResourceName} not found on container {bolbModelRequest.ContainerName}");
+                return false;
+            }
             _logger.LogInformation($"--> Resource {bolbModelRequest.ResourceName} deleted from container {bolbModelRequest.ContainerName}");
+            return true;
         }
 
                

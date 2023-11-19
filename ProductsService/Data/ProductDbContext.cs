@@ -14,8 +14,11 @@ namespace ProductsService.Data
         {
             modelBuilder.Entity<Product>()
                 .HasKey(nameof(Product.part_number), nameof(Product.company));
+            modelBuilder.Entity<Image>()
+                .HasKey(nameof(Image.name), nameof(Image.company));
         }
 
         public DbSet<Product> Products { get; set; }
+        public DbSet<Image> Images { get; set; }
     }
 }

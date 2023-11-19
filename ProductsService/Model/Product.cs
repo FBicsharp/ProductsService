@@ -24,8 +24,8 @@ namespace ProductsService.Model
         public DateTime creation_date { get; set; } = DateTime.UtcNow;
         [Required]
         public DateTime last_update { get; set; } = DateTime.UtcNow;
-        [MaxLength(63)]
-        public string imageId { get; set; }
+        [MaxLength(63)]        
+        public Guid imageId { get; set; }
         public ProductState state { get; set; }
 
 
