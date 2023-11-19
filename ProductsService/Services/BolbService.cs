@@ -75,7 +75,7 @@ namespace ProductsService.Model
         {
             var client = InitializeOrRetriveContainerClient(bolbModelRequest);
             var isDelated= await client.DeleteIfExistsAsync();
-            if (!isDelated)
+            if (!isDelated.Value)
             {
                 _logger.LogError($"--> Resource {bolbModelRequest.ResourceName} not found on container {bolbModelRequest.ContainerName}");
                 return false;

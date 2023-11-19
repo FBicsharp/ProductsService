@@ -14,10 +14,10 @@ namespace ProductsService.Controllers
         private readonly ILogger<ResourcesController> _logger;
         private readonly CompanySettings _companySettings;
         private readonly IBolbService _blobService;
-        private  BolbModelRequest _request;
+        private  IBolbModelRequest _request;
         private readonly IImagesRepo _imagesRepo;
 
-        public ResourcesController(ILogger<ResourcesController> logger, CompanySettings companySettings, IBolbService blobService, BolbModelRequest request,IImagesRepo imagesRepo)
+        public ResourcesController(ILogger<ResourcesController> logger, CompanySettings companySettings, IBolbService blobService, IBolbModelRequest request,IImagesRepo imagesRepo)
         {
             _logger = logger;
             _companySettings = companySettings;

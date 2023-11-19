@@ -1,4 +1,5 @@
 ﻿using Azure.Storage.Blobs;
+using ImagesService.Data;
 using Microsoft.EntityFrameworkCore;
 using ProductsService.Data;
 using ProductsService.Model;
@@ -21,6 +22,7 @@ namespace ProductsService.ServiceExtension
             services.AddScoped<IBolbService, BolbService>();
             services.AddTransient<IBolbModelRequest,BolbModelRequest>();
             services.AddScoped<IProductRepo, ProductRepo>();
+            services.AddScoped<IImagesRepo, ImagesRepo>();
             services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
 #if DEBUG
